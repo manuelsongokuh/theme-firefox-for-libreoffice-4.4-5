@@ -1,0 +1,113 @@
+#!/bin/bash
+# # created by Manuel Muzzurru for libreoffice 4.4 and 5 (for moment)
+# # based command in bash, (requist command: echo, rm, mkdir, wget, cp, sed, grep, exit)
+
+# for distro opensuse, other distro (will update)
+opensuse=4-suse
+
+# folder for tmp to HOMES
+folder_tmp=~/libreoffice-firefox-tmp/
+
+# for file registrymodifications.xcu
+file_core_libreoffice=~/.config/libreoffice/$opensuse/user/registrymodifications.xcu
+
+# location themes firefox for libreoffice
+path_theme_of_libreoffice=~/.config/libreoffice/$opensuse/user/gallery/personas/
+
+# the filename of source: from url to local (tmp)
+file_source=1.txt
+
+# for cycle clean (reset generator)
+rm -r $folder_tmp > /dev/null 2>&1
+
+# for cycle clean png (if repeats many times for changing theme firefox for libreoffice, safety)
+rm $path_theme_of_libreoffice*.png* > /dev/null 2>&1
+
+# input the url real, that you like a theme from firefox theme)
+echo "copy and paste here the url from firefox theme"
+echo -n "url of personas themes: " && read -e urlpersonas
+
+# make new folder for tmp any users
+mkdir -p "$folder_tmp"
+
+# start to download the url and to rename in tmp
+wget -O "$folder_tmp/$file_source" "$urlpersonas"
+
+# change directory to tmp
+cd $folder_tmp
+
+# take ID of theme firefox in variable
+ID_theme=$(grep -Po 'data-addon="\K[^"]*' $file_source)
+
+# check id input variable
+echo $ID_theme
+echo step 1
+
+#duplicate file for safety
+cp $file_source 2.txt
+echo step 2
+
+#delete "&#34;,&#34;" replace head-line, for separate all item
+sed -i 's/&#34;,&#34;/\n/g' 2.txt
+echo step 3
+
+# delete all lines except lines of ID theme
+cnty=$ID_theme
+for line in $(cat 2.txt); do
+    if [[ $line = *$cnty* ]]
+    then
+        echo $line >> 3.txt
+    fi
+done
+echo step 4
+
+# delete all lines except line of HEADER IMAGE
+cnty=headerURL
+for line in $(cat 3.txt); do
+    if [[ $line = *$cnty* ]]
+    then
+        echo $line >> 4.txt
+    fi
+done
+echo step 5
+
+# delete all lines except line of FOODER IMAGE
+cnty=footerURL
+for line in $(cat 3.txt); do
+    if [[ $line = *$cnty* ]]
+    then
+        echo $line >> 5.txt
+    fi
+done
+echo step 6
+
+# delete 1 line (clean double links)
+sed -i '1d' 4.txt
+sed -i '1d' 5.txt
+echo step 7
+
+# clean links correct, JPG or PNG (safety)
+grep -Po "http.*?$ID_theme.*?\.jpg" 4.txt >> result-4.txt
+grep -Po "http.*?$ID_theme.*?\.jpg" 5.txt >> result-5.txt
+grep -Po "http.*?$ID_theme.*?\.png" 4.txt >> result-4.txt
+grep -Po "http.*?$ID_theme.*?\.png" 5.txt >> result-5.txt
+echo step 8
+
+# start to download 2 images real of theme for libreoffice and rename file-extention
+wget -i  result-4.txt -O "$path_theme_of_libreoffice/header.png"
+wget -i  result-5.txt -O "$path_theme_of_libreoffice/footer.png"
+echo step 9
+
+# delete 2 lines where are config: "PersonaSetting", "persona", last line "</oor:items>" from the file "registrymodifications.xcu"
+sed -i '/PersonaSetting/d' $file_core_libreoffice
+sed -i '/Persona/d' $file_core_libreoffice
+sed -i '$ d' $file_core_libreoffice
+echo step 10
+
+# ADD 2 new lasts line the file "registrymodifications.xcu" (incluse to close "</oor:items>")
+echo '<item oor:path="/org.openoffice.Office.Common/Misc"><prop oor:name="PersonaSettings" oor:op="fuse"><value>header.png;footer.png</value></prop></item>' >> $file_core_libreoffice
+echo '<item oor:path="/org.openoffice.Office.Common/Misc"><prop oor:name="Persona" oor:op="fuse"><value>own</value></prop></item></oor:items>' >> $file_core_libreoffice
+
+# DELETE ALL TMP (for safety)
+rm -R $folder_tmp
+exit 1
