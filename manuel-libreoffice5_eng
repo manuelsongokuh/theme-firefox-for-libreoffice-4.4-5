@@ -93,20 +93,25 @@ grep -Po "http.*?$ID_theme.*?\.png" 4.txt >> result-4.txt
 grep -Po "http.*?$ID_theme.*?\.png" 5.txt >> result-5.txt
 echo step 8
 
+# create folder personas gallery of libreoffice
+mkdir -p "$path_theme_of_libreoffice"
+echo step 9
+
 # start to download 2 images real of theme for libreoffice and rename file-extention
 wget -i  result-4.txt -O "$path_theme_of_libreoffice/header.png"
 wget -i  result-5.txt -O "$path_theme_of_libreoffice/footer.png"
-echo step 9
+echo step 10
 
 # delete 2 lines where are config: "PersonaSetting", "persona", last line "</oor:items>" from the file "registrymodifications.xcu"
 sed -i '/PersonaSetting/d' $file_core_libreoffice
 sed -i '/Persona/d' $file_core_libreoffice
 sed -i '$ d' $file_core_libreoffice
-echo step 10
+echo step 11
 
 # ADD 2 new lasts line the file "registrymodifications.xcu" (incluse to close "</oor:items>")
 echo '<item oor:path="/org.openoffice.Office.Common/Misc"><prop oor:name="PersonaSettings" oor:op="fuse"><value>header.png;footer.png</value></prop></item>' >> $file_core_libreoffice
 echo '<item oor:path="/org.openoffice.Office.Common/Misc"><prop oor:name="Persona" oor:op="fuse"><value>own</value></prop></item></oor:items>' >> $file_core_libreoffice
+echo step 12
 
 # DELETE ALL TMP (for safety)
 rm -R $folder_tmp
