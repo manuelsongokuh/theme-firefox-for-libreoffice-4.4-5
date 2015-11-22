@@ -30,7 +30,7 @@ echo -n "url of personas themes: " && read -e urlpersonas
 # make new folder for tmp any users
 mkdir -p "$folder_tmp"
 
-# start to download the url and to rename in tmp
+# start to download from url the original html of firefox theme and to rename file and save in tmp
 wget -O "$folder_tmp/$file_source" "$urlpersonas"
 
 # change directory to tmp
